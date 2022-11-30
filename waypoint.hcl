@@ -43,7 +43,7 @@ app "wasp-evm" {
     # Build specifies how an application should be deployed. In this case,
     # we'll build using a Dockerfile and keeping it in a local registry.
     build {
-        use "nomad" {
+        use "docker" {
             // disable_entrypoint = false
             buildkit   = true
             dockerfile = "./Dockerfile"
