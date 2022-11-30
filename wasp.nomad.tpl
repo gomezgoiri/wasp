@@ -146,7 +146,14 @@ job "isc-${workspace}" {
       sticky  = true
     }
 
-    count = 0
+    count = 1
+
+    restart {
+      attempts = 3
+      delay    = "15s"
+      interval = "10m"
+      mode     = "delay"
+    }
 
     network {
       mode = "host"
@@ -255,7 +262,14 @@ job "isc-${workspace}" {
       sticky  = true
     }
 
-    count = 4
+    count = 1
+
+    restart {
+      attempts = 3
+      delay    = "15s"
+      interval = "10m"
+      mode     = "delay"
+    }
 
     network {
       mode = "host"
@@ -278,10 +292,6 @@ job "isc-${workspace}" {
       port "profiling" {
         host_network = "private"
       }
-      port "dlv" {
-        static = 40000
-        to = 40000
-      }
     }
 
     task "wasp" {
@@ -290,7 +300,8 @@ job "isc-${workspace}" {
       config {
        network_mode = "host"
         image        = "${artifact.image}:${artifact.tag}"
-        entrypoint   = ["wasp", "-c", "/local/config.json"]
+        // entrypoint   = ["/app/wasp"]
+        command      = ["-c", "/local/config.json"]
         ports = [
           "dashboard",
           "api",
@@ -352,10 +363,6 @@ job "isc-${workspace}" {
       service {
         tags = ["wasp", "profiling"]
         port = "profiling"
-      }
-      service {
-        tags = ["wasp", "dlv"]
-        port = "dlv"
       }
 
       template {

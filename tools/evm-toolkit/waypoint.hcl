@@ -6,6 +6,8 @@ project = "isc"
 # Labels can be specified for organizational purposes.
 labels = { "team" = "isc" }
 
+variable "adminWhitelist" {}
+
 variable "ghcr" {
     type = object({
         username = string
