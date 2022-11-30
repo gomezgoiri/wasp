@@ -59,8 +59,10 @@ app "wasp-evm" {
                 image = "ghcr.io/luke-thorne/wasp"
                 tag = gitrefhash()
                 auth {
-                    hostname = var.ghcr.server_address
-                    serverAddress = var.ghcr.server_address
+                    hostname = "ghcr.io"
+                    serverAddress = "https://ghcr.io"
+                    username = var.ghcr.username
+                    password = var.ghcr.password
                 }
                 username = var.ghcr.username
                 password = var.ghcr.password
