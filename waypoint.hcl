@@ -45,7 +45,7 @@ app "wasp-evm" {
     build {
           use "pack" {
             builder     = "heroku/go"
-            disable_entrypoint = false
+            disable_entrypoint = true
         }
 
         // use "docker" {
