@@ -58,7 +58,10 @@ app "wasp-evm" {
             use "docker" {
                 image = "ghcr.io/luke-thorne/wasp"
                 tag = gitrefhash()
-                encoded_auth = base64encode(jsonencode(var.ghcr))
+                auth = var.ghcr
+                // username = var.ghcr.username
+                // password = var.ghcr.password
+                // encoded_auth = base64encode(jsonencode(var.ghcr))
             }
         }
     }
