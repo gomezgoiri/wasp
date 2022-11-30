@@ -36,7 +36,7 @@ app "wasp-evm" {
 
         data_source "git" {
             url  = "https://github.com/iotaledger/wasp.git"
-            ref = "v0.3.8"
+            ref = "feat/waypoint-runner"
         }
     }
 
@@ -66,6 +66,8 @@ app "wasp-evm" {
                 }
                 username = var.ghcr.username
                 password = var.ghcr.password
+                local = false
+                insecure = false
                 // encoded_auth = base64encode(jsonencode(var.ghcr))
             }
         }
