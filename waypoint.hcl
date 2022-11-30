@@ -43,9 +43,9 @@ app "wasp-evm" {
     # Build specifies how an application should be deployed. In this case,
     # we'll build using a Dockerfile and keeping it in a local registry.
     build {
-          use "pack" {
+        use "pack" {
             // builder     = "heroku/go"
-            disable_entrypoint = true
+            // disable_entrypoint = true
         }
 
         // use "docker" {
