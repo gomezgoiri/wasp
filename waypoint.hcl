@@ -44,7 +44,7 @@ app "wasp-evm" {
     # we'll build using a Dockerfile and keeping it in a local registry.
     build {
         use "docker" {
-            // disable_entrypoint = false
+            disable_entrypoint = true
             buildkit   = true
             dockerfile = "./Dockerfile"
             build_args = {
@@ -56,7 +56,7 @@ app "wasp-evm" {
 
         registry {
             use "docker" {
-                image = "ghcr.io/luke-thorne/wasp"
+                image = "https://ghcr.io/luke-thorne/wasp"
                 tag = gitrefhash()
                 encoded_auth = base64encode(jsonencode(var.ghcr))
             }
