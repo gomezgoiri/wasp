@@ -43,16 +43,21 @@ app "wasp-evm" {
     # Build specifies how an application should be deployed. In this case,
     # we'll build using a Dockerfile and keeping it in a local registry.
     build {
-        use "docker" {
-            disable_entrypoint = true
-            buildkit   = true
-            dockerfile = "./Dockerfile.noncached"
-            build_args = {
-                BUILD_TAGS = "rocksdb"
-                BUILD_LD_FLAGS = "-X github.com/iotaledger/wasp/packages/wasp.VersionHash=${gitrefhash()}"
-                BUILD_TARGET = "..."
-            }
+          use "pack" {
+            builder     = "heroku/go"
+            disable_entrypoint = false
         }
+
+        // use "docker" {
+        //     disable_entrypoint = true
+        //     buildkit   = true
+        //     dockerfile = "./Dockerfile.noncached"
+        //     build_args = {
+        //         BUILD_TAGS = "rocksdb"
+        //         BUILD_LD_FLAGS = "-X github.com/iotaledger/wasp/packages/wasp.VersionHash=${gitrefhash()}"
+        //         BUILD_TARGET = "..."
+        //     }
+        // }
 
         registry {
             use "docker" {
