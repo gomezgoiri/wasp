@@ -44,7 +44,7 @@ app "wasp-evm" {
     # we'll build using a Dockerfile and keeping it in a local registry.
     build {
           use "pack" {
-            builder     = "heroku/go"
+            // builder     = "heroku/go"
             disable_entrypoint = true
         }
 
