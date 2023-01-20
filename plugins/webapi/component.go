@@ -3,12 +3,12 @@ package webapi
 import (
 	"context"
 	"errors"
+	"github.com/labstack/echo/v4/middleware"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/pangpanglabs/echoswagger/v2"
 	"go.uber.org/dig"
 
@@ -125,10 +125,10 @@ func provide(c *dig.Container) error {
 		}))
 
 		// TODO using this middleware hides the stack trace https://github.com/golang/go/issues/27375
-		e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+		/*e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 			ErrorMessage: "request timeout exceeded",
 			Timeout:      1 * time.Minute,
-		}))
+		}))*/
 
 		echoSwagger := echoswagger.New(e, "/doc", &echoswagger.Info{
 			Title:       "Wasp API",

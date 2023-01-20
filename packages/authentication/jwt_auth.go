@@ -198,7 +198,8 @@ func initJWT(duration time.Duration, nodeID string, privateKey []byte, userManag
 	jwtAuthSkipper := func(context echo.Context) bool {
 		path := context.Request().URL.Path
 
-		if strings.HasSuffix(path, shared.AuthRoute()) || strings.HasSuffix(path, shared.AuthInfoRoute()) || path == "/" || strings.HasPrefix(path, "/doc") {
+		// TODO: Clean this up once we can remove webapi v1
+		if strings.HasSuffix(path, shared.AuthRoute()) || strings.HasSuffix(path, shared.AuthInfoRoute()) || path == "/" || strings.HasPrefix(path, "/doc") || path == "/v2/ws" || path == "/ws" {
 			return true
 		}
 
