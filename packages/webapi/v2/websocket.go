@@ -2,6 +2,7 @@ package v2
 
 import (
 	_ "embed"
+
 	"github.com/iotaledger/wasp/packages/publisher"
 
 	"github.com/labstack/echo/v4"
@@ -21,7 +22,7 @@ func addWebSocketEndpoint(e echoswagger.ApiRoot, log *logger.Logger) *webSocketA
 		pws: publisherws.New(log, []string{publisher.ISCEventKindNewBlock, publisher.ISCEventKindReceipt, publisher.ISCEventIssuerVM}),
 	}
 
-	e.Echo().Any("/ws", api.handleWebSocket)
+	e.Echo().GET("/ws", api.handleWebSocket)
 
 	return api
 }

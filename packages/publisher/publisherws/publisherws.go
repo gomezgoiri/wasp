@@ -4,12 +4,13 @@
 package publisherws
 
 import (
-	"github.com/iotaledger/hive.go/core/subscriptionmanager"
+	"encoding/json"
 	"net/http"
 	"strings"
 
 	"github.com/iotaledger/hive.go/core/events"
 	"github.com/iotaledger/hive.go/core/logger"
+	"github.com/iotaledger/hive.go/core/subscriptionmanager"
 	"github.com/iotaledger/wasp/packages/isc"
 	"github.com/iotaledger/wasp/packages/publisher"
 )
@@ -18,6 +19,7 @@ type PublisherWebSocket struct {
 	log                 *logger.Logger
 	msgTypes            map[string]bool
 	subscriptionManager *subscriptionmanager.SubscriptionManager[string, string]
+	sessions            map[string]*WebSocketSession
 }
 
 func New(log *logger.Logger, msgTypes []string) *PublisherWebSocket {
@@ -34,6 +36,7 @@ func New(log *logger.Logger, msgTypes []string) *PublisherWebSocket {
 		log:                 log.Named("PublisherWebSocket"),
 		msgTypes:            msgTypesMap,
 		subscriptionManager: subscriptionManager,
+		sessions:            map[string]*WebSocketSession{},
 	}
 }
 
@@ -42,6 +45,7 @@ func (p *PublisherWebSocket) createEventWriter(session *WebSocketSession, chainI
 		if !p.msgTypes[msgType] {
 			return
 		}
+
 		if len(parts) < 1 {
 			return
 		}
@@ -52,36 +56,75 @@ func (p *PublisherWebSocket) createEventWriter(session *WebSocketSession, chainI
 			}
 		}
 
-		msg := msgType + " " + strings.Join(parts, " ")
-
-		if err := session.WriteMessage(msg); err != nil {
-			p.log.Warnf("dropping websocket message for %s, reason: %v", request.RemoteAddr, err)
+		if !p.subscriptionManager.HasSubscribers(msgType) {
+			return
 		}
 
+		msg := msgType + " " + strings.Join(parts, " ")
+
+		if err := session.WriteMessage([]byte(msg)); err != nil {
+			p.log.Warnf("dropping websocket message for %s, reason: %v", request.RemoteAddr, err)
+		}
 	})
 
 	return eventClosure
 }
 
+const (
+	CommandSubscribe   = "subscribe"
+	CommandUnsubscribe = "unsubscribe"
+)
+
+type ControlCommand struct {
+	Command  string `json:"command"`
+	Argument string `json:"argument"`
+}
+
+func (p *PublisherWebSocket) handleSubscriptionManagerCommands(connectionID string, message []byte) {
+	var command ControlCommand
+
+	if err := json.Unmarshal(message, &command); err != nil {
+		p.log.Warnf("Could not deserialize message to type ControlCommand")
+		return
+	}
+
+	switch command.Command {
+	case CommandSubscribe:
+		p.subscriptionManager.Subscribe(connectionID, command.Argument)
+	case CommandUnsubscribe:
+		p.subscriptionManager.Unsubscribe(connectionID, command.Argument)
+	}
+}
+
 // ServeHTTP serves the websocket.
 // Provide a chainID to filter for a certain chain, provide an empty chain id to get all chain events.
 func (p *PublisherWebSocket) ServeHTTP(chainID isc.ChainID, responseWriter http.ResponseWriter, request *http.Request) error {
-	session, err := InitializeWebSocketSessionFromRequest(responseWriter, request)
-
+	session, err := AcceptWebSocketSession(responseWriter, request)
 	if err != nil {
 		return err
 	}
 
-	session.OnMessage = func(connectionId string, message string) {
-		p.log.Infof("New message! [%v] %v", connectionId, message)
+	session.OnMessage = func(connectionID string, message []byte) {
+		p.log.Infof("New message! [ConID: %v] [Message: '%v']", connectionID, message)
+		p.handleSubscriptionManagerCommands(connectionID, message)
 	}
 
-	session.OnConnect = func(connectionId string) {
-		p.log.Infof("Connection created! [%v]", connectionId)
+	session.OnConnect = func(connectionID string) {
+		p.log.Infof("Websocket connection created [ConID: %v]", connectionID)
+		p.sessions[connectionID] = session
+		p.subscriptionManager.Connect(connectionID)
 	}
 
-	session.OnDisconnect = func(connectionId string) {
-		p.log.Infof("Connection died! [%v]", connectionId)
+	session.OnDisconnect = func(connectionID string) {
+		p.log.Infof("Websocket connection dropped [ConID: %v]", connectionID)
+		if _, ok := p.sessions[connectionID]; ok {
+			delete(p.sessions, connectionID)
+			p.subscriptionManager.Disconnect(connectionID)
+		}
+	}
+
+	session.OnError = func(connectionID string, err error) {
+		p.log.Errorf("Websocket connection error [ConID: %v] [Error: %v]", connectionID, err)
 	}
 
 	p.log.Debugf("accepted websocket connection from %s", request.RemoteAddr)
@@ -91,7 +134,5 @@ func (p *PublisherWebSocket) ServeHTTP(chainID isc.ChainID, responseWriter http.
 	publisher.Event.Hook(eventWriter)
 	defer publisher.Event.Detach(eventWriter)
 
-	session.Listen()
-
-	return nil
+	return session.Listen()
 }
