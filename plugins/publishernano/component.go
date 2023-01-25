@@ -3,8 +3,6 @@ package publishernano
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	"go.nanomsg.org/mangos/v3"
 	"go.nanomsg.org/mangos/v3/protocol/pub"
 	_ "go.nanomsg.org/mangos/v3/transport/all"
@@ -83,8 +81,8 @@ func run() error {
 		panic(err)
 	}
 
-	publisher.Event.Hook(events.NewClosure(func(msgType string, parts []string) {
-		msg := msgType + " " + strings.Join(parts, " ")
+	publisher.Event.Hook(events.NewClosure(func(event *publisher.ISCEvent) {
+		msg := event.Kind
 		select {
 		case messages <- []byte(msg):
 		default:

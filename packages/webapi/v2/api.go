@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"github.com/iotaledger/hive.go/core/websockethub"
 	"time"
 
 	"github.com/pangpanglabs/echoswagger/v2"
@@ -49,6 +50,7 @@ func loadControllers(server echoswagger.ApiRoot, userManager *userspkg.UserManag
 func Init(
 	logger *loggerpkg.Logger,
 	server echoswagger.ApiRoot,
+	hub *websockethub.Hub,
 	waspVersion string,
 	config *configuration.Configuration,
 	networkProvider peering.NetworkProvider,
@@ -91,6 +93,6 @@ func Init(
 		corecontracts.NewCoreContractsController(vmService),
 	}
 
-	addWebSocketEndpoint(server, logger)
+	addWebSocketEndpoint(server, hub, logger)
 	loadControllers(server, userManager, nodeIdentityProvider, authConfig, mocker, controllersToLoad)
 }

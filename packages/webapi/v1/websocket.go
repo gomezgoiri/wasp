@@ -17,7 +17,7 @@ type webSocketAPI struct {
 
 func addWebSocketEndpoint(e echoswagger.ApiGroup, log *logger.Logger) *webSocketAPI {
 	api := &webSocketAPI{
-		pws: publisherws.New(log, []string{"state", "contract"}),
+		//pws: publisherws.New(log, []string{"state", "contract"}),
 	}
 
 	e.GET("/chain/:chainID/ws", api.handleWebSocket).

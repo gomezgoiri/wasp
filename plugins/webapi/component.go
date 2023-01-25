@@ -3,9 +3,11 @@ package webapi
 import (
 	"context"
 	"errors"
+	"github.com/iotaledger/hive.go/core/websockethub"
 	"github.com/labstack/echo/v4/middleware"
 	"net"
 	"net/http"
+	"nhooyr.io/websocket"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -49,6 +51,13 @@ var (
 	deps   dependencies
 )
 
+const (
+	broadcastQueueSize            = 20000
+	clientSendChannelSize         = 1000
+	webSocketWriteTimeout         = time.Duration(3) * time.Second
+	maxWebsocketMessageSize int64 = 510
+)
+
 type dependencies struct {
 	dig.In
 
@@ -77,11 +86,11 @@ func provide(c *dig.Container) error {
 	type webapiServerDeps struct {
 		dig.In
 
-		AppInfo                     *app.Info
-		AppConfig                   *configuration.Configuration `name:"appConfig"`
-		ShutdownHandler             *shutdown.ShutdownHandler
-		APICacheTTL                 time.Duration `name:"apiCacheTTL"`
-		PublisherPort               int           `name:"publisherPort"`
+		AppInfo         *app.Info
+		AppConfig       *configuration.Configuration `name:"appConfig"`
+		ShutdownHandler *shutdown.ShutdownHandler
+		APICacheTTL     time.Duration `name:"apiCacheTTL"`
+		//PublisherPort               int           `name:"publisherPort"`
 		Chains                      *chains.Chains
 		NodeConnectionMetrics       nodeconnmetrics.NodeConnectionMetrics
 		ChainRecordRegistryProvider registry.ChainRecordRegistryProvider
@@ -149,6 +158,9 @@ func provide(c *dig.Container) error {
 			SetUI(echoswagger.UISetting{DetachSpec: false, HideTop: false}).
 			SetScheme("http", "https")
 
+		websocketOptions := websocket.AcceptOptions{InsecureSkipVerify: true}
+		hub := websockethub.NewHub(Plugin.Logger(), &websocketOptions, broadcastQueueSize, clientSendChannelSize, maxWebsocketMessageSize)
+
 		v1.Init(
 			Plugin.App().NewLogger("WebAPI/v1"),
 			echoSwagger,
@@ -172,12 +184,13 @@ func provide(c *dig.Container) error {
 			ParamsWebAPI.Auth,
 			ParamsWebAPI.NodeOwnerAddresses,
 			deps.APICacheTTL,
-			deps.PublisherPort,
+			1337,
 		)
 
 		v2.Init(
 			Plugin.App().NewLogger("WebAPI/v2"),
 			echoSwagger,
+			hub,
 			deps.AppInfo.Version,
 			deps.AppConfig,
 			deps.NetworkProvider,
@@ -198,6 +211,14 @@ func provide(c *dig.Container) error {
 			ParamsWebAPI.NodeOwnerAddresses,
 			deps.APICacheTTL,
 		)
+
+		if err := Plugin.Daemon().BackgroundWorker("WebAPI[WS]", func(ctx context.Context) {
+			go hub.Run(ctx)
+			<-ctx.Done()
+			Plugin.LogInfo("Stopping WebAPI[WS]")
+		}, daemon.PriorityNanoMsg); err != nil {
+			Plugin.LogPanic("Failed to run websocket worker: %s", err)
+		}
 
 		return webapiServerResult{
 			Echo:        e,

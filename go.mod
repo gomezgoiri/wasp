@@ -5,6 +5,7 @@ go 1.19
 replace (
 	github.com/ethereum/go-ethereum => github.com/iotaledger/go-ethereum v0.0.0-20221102180613-7d920af2031d
 	go.dedis.ch/kyber/v3 v3.0.14 => github.com/kape1395/kyber/v3 v3.0.14-0.20210622094514-fefb81148dc3 // branch: dkg-2suites
+	github.com/iotaledger/hive.go/core => "../hive.go/core"
 )
 
 require (
@@ -13,7 +14,7 @@ require (
 	github.com/bytecodealliance/wasmtime-go/v3 v3.0.2
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/iotaledger/hive.go/core v1.0.0-rc.2.0.20230120131747-b65c9cb22ea9
+	github.com/iotaledger/hive.go/core v1.0.0-rc.2.0.20230121131758-04e679cec1c6
 	github.com/iotaledger/hive.go/serializer/v2 v2.0.0-rc.1
 	github.com/iotaledger/inx-app v1.0.0-rc.2
 	github.com/iotaledger/inx/go v1.0.0-rc.1

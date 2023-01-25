@@ -14,10 +14,9 @@ import (
 )
 
 var Event = events.NewEvent(func(handler interface{}, params ...interface{}) {
-	callback := handler.(func(msgType string, parts []string))
-	msgType := params[0].(string)
-	parts := params[1].([]string)
-	callback(msgType, parts)
+	callback := handler.(func(event *ISCEvent))
+	event := params[0].(*ISCEvent)
+	callback(event)
 })
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,5 +87,5 @@ func (p *Publisher) handleBlockApplied(blockApplied *publisherBlockApplied) {
 
 func (p *Publisher) publish(e *ISCEvent) {
 	p.log.Debugf("Publishing %v", e.String())
-	Event.Trigger(e.Kind, []string{e.String()})
+	Event.Trigger(e)
 }

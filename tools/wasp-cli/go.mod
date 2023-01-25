@@ -4,14 +4,16 @@ go 1.19
 
 replace (
 	github.com/ethereum/go-ethereum => github.com/iotaledger/go-ethereum v0.0.0-20221102180613-7d920af2031d
+	github.com/iotaledger/hive.go/core => ../../../hive.go/core
 	github.com/iotaledger/wasp => ../../
 	go.dedis.ch/kyber/v3 v3.0.14 => github.com/kape1395/kyber/v3 v3.0.14-0.20210622094514-fefb81148dc3 // branch: dkg-2suites
+
 )
 
 require (
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/hashicorp/go-version v1.6.0
-	github.com/iotaledger/hive.go/core v1.0.0-rc.2.0.20230120131747-b65c9cb22ea9
+	github.com/iotaledger/hive.go/core v1.0.0-rc.2.0.20230121131758-04e679cec1c6
 	github.com/iotaledger/iota.go/v3 v3.0.0-rc.1.0.20221212191201-0105a0847e96
 	github.com/iotaledger/wasp v1.0.0-00010101000000-000000000000
 	github.com/spf13/cobra v1.6.1
