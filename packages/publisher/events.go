@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	ISCEventKindNewBlock      = "new_block"
-	ISCEventKindReceipt       = "receipt" // issuer will be the request sender
-	ISCEventKindSmartContract = "contract"
+	ISCEventKindNewBlock         = "new_block"
+	ISCEventKindReceipt          = "receipt" // issuer will be the // request sender
+	ISCEventKindRequestProcessed = "request_processed"
+	ISCEventKindSmartContract    = "contract"
 )
 
 const ISCEventIssuerVM = "vm"
@@ -23,7 +24,11 @@ type ISCEvent struct {
 	Issuer    isc.AgentID // nil means issued by the VM
 	RequestID isc.RequestID
 	ChainID   isc.ChainID
-	Content   string
+	Content   interface{}
+}
+
+type RequestProcessedEvent struct {
+	RequestID string
 }
 
 // kind is not printed right now, because it is added when calling p.publish
@@ -53,7 +58,7 @@ func PublishBlockEvents(blockApplied *publisherBlockApplied, publish func(*ISCEv
 		Issuer: nil,
 		// TODO should probably be JSON? right now its just some printed strings
 		// TODO the L1 commitment will be nil (on the blocklog), but at this point the L1 commitment has already been calculated, so we could potentially add it to blockInfo
-		Content: blockInfo.String(),
+		Content: blockInfo,
 		ChainID: chainID,
 	})
 
@@ -67,7 +72,7 @@ func PublishBlockEvents(blockApplied *publisherBlockApplied, publish func(*ISCEv
 			publish(&ISCEvent{
 				Kind:      ISCEventKindReceipt,
 				Issuer:    receipt.Request.SenderAccount(),
-				Content:   receipt.String(),
+				Content:   receipt,
 				RequestID: receipt.Request.ID(),
 				ChainID:   chainID,
 			})

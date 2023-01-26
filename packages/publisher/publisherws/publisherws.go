@@ -5,20 +5,21 @@ package publisherws
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+
 	"github.com/iotaledger/hive.go/core/events"
 	"github.com/iotaledger/hive.go/core/logger"
 	"github.com/iotaledger/hive.go/core/subscriptionmanager"
 	"github.com/iotaledger/hive.go/core/websockethub"
 	"github.com/iotaledger/wasp/packages/isc"
 	"github.com/iotaledger/wasp/packages/publisher"
-	"net/http"
 )
 
 type PublisherWebSocket struct {
 	hub                 *websockethub.Hub
 	log                 *logger.Logger
 	msgTypes            map[string]bool
-	sessions            map[string]*WebSocketSession
 	subscriptionManager *subscriptionmanager.SubscriptionManager[websockethub.ClientID, string]
 }
 
@@ -37,11 +38,18 @@ func New(log *logger.Logger, hub *websockethub.Hub, msgTypes []string) *Publishe
 		log:                 log.Named("PublisherWebSocket"),
 		msgTypes:            msgTypesMap,
 		subscriptionManager: subscriptionManager,
-		sessions:            map[string]*WebSocketSession{},
 	}
 }
 
-func (p *PublisherWebSocket) createEventWriter(session *websockethub.Client, chainID isc.ChainID) *events.Closure {
+func (p *PublisherWebSocket) hasSubscribedToAllChains(session *websockethub.Client) bool {
+	return p.subscriptionManager.ClientSubscribedToTopic(session.ID(), "chains")
+}
+
+func (p *PublisherWebSocket) hasSubscribedToSingleChain(session *websockethub.Client, chainID isc.ChainID) bool {
+	return p.subscriptionManager.ClientSubscribedToTopic(session.ID(), fmt.Sprintf("chains/%s", chainID.String()))
+}
+
+func (p *PublisherWebSocket) createEventWriter(session *websockethub.Client) *events.Closure {
 	eventClosure := events.NewClosure(func(event *publisher.ISCEvent) {
 		if event == nil {
 			return
@@ -51,10 +59,8 @@ func (p *PublisherWebSocket) createEventWriter(session *websockethub.Client, cha
 			return
 		}
 
-		if !chainID.Empty() {
-			if !event.ChainID.Equals(chainID) {
-				return
-			}
+		if !p.hasSubscribedToAllChains(session) && !p.hasSubscribedToSingleChain(session, event.ChainID) {
+			return
 		}
 
 		if !p.subscriptionManager.ClientSubscribedToTopic(session.ID(), event.Kind) {
@@ -108,8 +114,6 @@ func (p *PublisherWebSocket) handleSubscriptionCommand(client *websockethub.Clie
 }
 
 func (p *PublisherWebSocket) handleNodeCommands(client *websockethub.Client, message []byte) {
-	p.log.Info(string(message))
-
 	var baseCommand BaseCommand
 	if err := json.Unmarshal(message, &baseCommand); err != nil {
 		p.log.Warnf("Could not deserialize message to type BaseCommand")
@@ -127,9 +131,7 @@ func (p *PublisherWebSocket) handleNodeCommands(client *websockethub.Client, mes
 func (p *PublisherWebSocket) OnClientCreated(chainID isc.ChainID, client *websockethub.Client) {
 	client.ReceiveChan = make(chan *websockethub.WebsocketMsg, 100)
 
-	p.log.Info("client created!")
-
-	eventWriter := p.createEventWriter(client, chainID)
+	eventWriter := p.createEventWriter(client)
 	publisher.Event.Hook(eventWriter)
 	defer publisher.Event.Detach(eventWriter)
 
@@ -138,19 +140,14 @@ func (p *PublisherWebSocket) OnClientCreated(chainID isc.ChainID, client *websoc
 			select {
 			case <-client.ExitSignal:
 				// client was disconnected
-				p.log.Info("Connection ended")
-
 				return
 
 			case msg, ok := <-client.ReceiveChan:
 				if !ok {
 					// client was disconnected
-					p.log.Info("Connection ended")
-
 					return
 				}
 
-				p.log.Info("Message")
 				p.handleNodeCommands(client, msg.Data)
 			}
 		}
@@ -169,10 +166,10 @@ func (p *PublisherWebSocket) OnDisconnect(client *websockethub.Client, request *
 
 // ServeHTTP serves the websocket.
 // Provide a chainID to filter for a certain chain, provide an empty chain id to get all chain events.
-func (p *PublisherWebSocket) ServeHTTP(chainID isc.ChainID, responseWriter http.ResponseWriter, request *http.Request) error {
+func (p *PublisherWebSocket) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) error {
 	p.hub.ServeWebsocket(responseWriter, request,
 		func(client *websockethub.Client) {
-			p.OnClientCreated(chainID, client)
+			p.OnClientCreated(client)
 		}, func(client *websockethub.Client) {
 			p.OnConnect(client, request)
 		}, func(client *websockethub.Client) {
