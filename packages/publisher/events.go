@@ -11,10 +11,9 @@ import (
 )
 
 const (
-	ISCEventKindNewBlock         = "new_block"
-	ISCEventKindReceipt          = "receipt" // issuer will be the // request sender
-	ISCEventKindRequestProcessed = "request_processed"
-	ISCEventKindSmartContract    = "contract"
+	ISCEventKindNewBlock      = "new_block"
+	ISCEventKindReceipt       = "receipt" // issuer will be the // request sender
+	ISCEventKindSmartContract = "contract"
 )
 
 const ISCEventIssuerVM = "vm"
