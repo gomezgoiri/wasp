@@ -128,7 +128,7 @@ func (p *PublisherWebSocket) handleNodeCommands(client *websockethub.Client, mes
 	}
 }
 
-func (p *PublisherWebSocket) OnClientCreated(chainID isc.ChainID, client *websockethub.Client) {
+func (p *PublisherWebSocket) OnClientCreated(client *websockethub.Client) {
 	client.ReceiveChan = make(chan *websockethub.WebsocketMsg, 100)
 
 	eventWriter := p.createEventWriter(client)
