@@ -4,6 +4,7 @@
 package publisherws
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -49,7 +50,7 @@ func (p *PublisherWebSocket) hasSubscribedToSingleChain(session *websockethub.Cl
 	return p.subscriptionManager.ClientSubscribedToTopic(session.ID(), fmt.Sprintf("chains/%s", chainID.String()))
 }
 
-func (p *PublisherWebSocket) createEventWriter(session *websockethub.Client) *events.Closure {
+func (p *PublisherWebSocket) createEventWriter(ctx context.Context, session *websockethub.Client) *events.Closure {
 	eventClosure := events.NewClosure(func(event *publisher.ISCEvent) {
 		if event == nil {
 			return
@@ -67,7 +68,7 @@ func (p *PublisherWebSocket) createEventWriter(session *websockethub.Client) *ev
 			return
 		}
 
-		session.Send(event)
+		session.Send(ctx, event)
 	})
 
 	return eventClosure
@@ -90,7 +91,7 @@ type SubscriptionCommand struct {
 	Topic   string `json:"topic"`
 }
 
-func (p *PublisherWebSocket) handleSubscriptionCommand(client *websockethub.Client, message []byte) {
+func (p *PublisherWebSocket) handleSubscriptionCommand(ctx context.Context, client *websockethub.Client, message []byte) {
 	var command SubscriptionCommand
 	if err := json.Unmarshal(message, &command); err != nil {
 		p.log.Warnf("Could not deserialize message to type ControlCommand")
@@ -100,20 +101,20 @@ func (p *PublisherWebSocket) handleSubscriptionCommand(client *websockethub.Clie
 	switch command.Command {
 	case CommandSubscribe:
 		p.subscriptionManager.Subscribe(client.ID(), command.Topic)
-		client.Send(SubscriptionCommand{
+		client.Send(ctx, SubscriptionCommand{
 			Command: CommandClientWasSubscribed,
 			Topic:   command.Topic,
 		})
 	case CommandUnsubscribe:
 		p.subscriptionManager.Unsubscribe(client.ID(), command.Topic)
-		client.Send(SubscriptionCommand{
+		client.Send(ctx, SubscriptionCommand{
 			Command: CommandClientWasUnsubscribed,
 			Topic:   command.Topic,
 		})
 	}
 }
 
-func (p *PublisherWebSocket) handleNodeCommands(client *websockethub.Client, message []byte) {
+func (p *PublisherWebSocket) handleNodeCommands(ctx context.Context, client *websockethub.Client, message []byte) {
 	var baseCommand BaseCommand
 	if err := json.Unmarshal(message, &baseCommand); err != nil {
 		p.log.Warnf("Could not deserialize message to type BaseCommand")
@@ -122,16 +123,16 @@ func (p *PublisherWebSocket) handleNodeCommands(client *websockethub.Client, mes
 
 	switch baseCommand.Command {
 	case CommandSubscribe, CommandUnsubscribe:
-		p.handleSubscriptionCommand(client, message)
+		p.handleSubscriptionCommand(ctx, client, message)
 	default:
 		p.log.Warnf("Could not deserialize message")
 	}
 }
 
-func (p *PublisherWebSocket) OnClientCreated(client *websockethub.Client) {
+func (p *PublisherWebSocket) OnClientCreated(ctx context.Context, client *websockethub.Client) {
 	client.ReceiveChan = make(chan *websockethub.WebsocketMsg, 100)
 
-	eventWriter := p.createEventWriter(client)
+	eventWriter := p.createEventWriter(ctx, client)
 	publisher.Event.Hook(eventWriter)
 	defer publisher.Event.Detach(eventWriter)
 
@@ -148,7 +149,7 @@ func (p *PublisherWebSocket) OnClientCreated(client *websockethub.Client) {
 					return
 				}
 
-				p.handleNodeCommands(client, msg.Data)
+				p.handleNodeCommands(ctx, client, msg.Data)
 			}
 		}
 	}()
@@ -167,14 +168,12 @@ func (p *PublisherWebSocket) OnDisconnect(client *websockethub.Client, request *
 // ServeHTTP serves the websocket.
 // Provide a chainID to filter for a certain chain, provide an empty chain id to get all chain events.
 func (p *PublisherWebSocket) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) error {
-	p.hub.ServeWebsocket(responseWriter, request,
+	return p.hub.ServeWebsocket(responseWriter, request,
 		func(client *websockethub.Client) {
-			p.OnClientCreated(client)
+			p.OnClientCreated(request.Context(), client)
 		}, func(client *websockethub.Client) {
 			p.OnConnect(client, request)
 		}, func(client *websockethub.Client) {
 			p.OnDisconnect(client, request)
 		})
-
-	return nil
 }

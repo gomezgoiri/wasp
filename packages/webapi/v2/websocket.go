@@ -2,9 +2,8 @@ package v2
 
 import (
 	_ "embed"
-	"github.com/iotaledger/hive.go/core/websockethub"
-	"github.com/iotaledger/wasp/packages/isc"
 
+	"github.com/iotaledger/hive.go/core/websockethub"
 	"github.com/iotaledger/wasp/packages/publisher"
 
 	"github.com/labstack/echo/v4"
@@ -29,5 +28,5 @@ func addWebSocketEndpoint(e echoswagger.ApiRoot, hub *websockethub.Hub, log *log
 }
 
 func (w *webSocketAPI) handleWebSocket(c echo.Context) error {
-	return w.pws.ServeHTTP(isc.EmptyChainID(), c.Response(), c.Request())
+	return w.pws.ServeHTTP(c.Response(), c.Request())
 }

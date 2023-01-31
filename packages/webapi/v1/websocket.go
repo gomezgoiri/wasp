@@ -7,7 +7,6 @@ import (
 	"github.com/pangpanglabs/echoswagger/v2"
 
 	"github.com/iotaledger/hive.go/core/logger"
-	"github.com/iotaledger/wasp/packages/isc"
 	"github.com/iotaledger/wasp/packages/publisher/publisherws"
 )
 
@@ -28,9 +27,9 @@ func addWebSocketEndpoint(e echoswagger.ApiGroup, log *logger.Logger) *webSocket
 }
 
 func (w *webSocketAPI) handleWebSocket(c echo.Context) error {
-	chainID, err := isc.ChainIDFromString(c.Param("chainID"))
+	/*chainID, err := isc.ChainIDFromString(c.Param("chainID"))
 	if err != nil {
 		return err
-	}
-	return w.pws.ServeHTTP(chainID, c.Response(), c.Request())
+	}*/
+	return w.pws.ServeHTTP(c.Response(), c.Request())
 }
