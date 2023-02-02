@@ -8,7 +8,7 @@ import (
 
 	iotago "github.com/iotaledger/iota.go/v3"
 	"github.com/iotaledger/wasp/packages/peering"
-	"github.com/iotaledger/wasp/tools/wasp-cli/config"
+	"github.com/iotaledger/wasp/tools/wasp-cli/cli/config"
 	"github.com/iotaledger/wasp/tools/wasp-cli/log"
 )
 
@@ -23,7 +23,7 @@ func initTrustCmd() *cobra.Command {
 			_, err := iotago.DecodeHex(pubKey) // Assert it can be decoded.
 			log.Check(err)
 			log.Check(peering.CheckNetID(netID))
-			_, err = config.WaspClient(config.MustWaspAPI()).PostPeeringTrusted(pubKey, netID)
+			_, err = config.WaspClient(config.MustWaspAPIURL()).PostPeeringTrusted(pubKey, netID)
 			log.Check(err)
 		},
 	}
