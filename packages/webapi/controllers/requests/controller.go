@@ -6,8 +6,8 @@ import (
 	"github.com/pangpanglabs/echoswagger/v2"
 
 	"github.com/iotaledger/wasp/packages/kv/dict"
-	"github.com/iotaledger/wasp/packages/webapi/v2/interfaces"
-	"github.com/iotaledger/wasp/packages/webapi/v2/models"
+	"github.com/iotaledger/wasp/packages/webapi/interfaces"
+	"github.com/iotaledger/wasp/packages/webapi/models"
 )
 
 type Controller struct {
