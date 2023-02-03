@@ -103,7 +103,7 @@ func initDepositCmd() *cobra.Command {
 				log.Check(err)
 				tokensStr := strings.Split(strings.Join(args[1:], ""), ",")
 				tokens := util.ParseFungibleTokens(tokensStr)
-				allowance := isc.NewAllowanceFungibleTokens(tokens.Clone())
+				allowance := tokens.Clone()
 
 				util.WithSCTransaction(GetCurrentChainID(), func() (*iotago.Transaction, error) {
 					client := cliclients.WaspClientForIndex()

@@ -1,6 +1,7 @@
 package chainclient
 
 import (
+	"sync"
 	"context"
 
 	iotago "github.com/iotaledger/iota.go/v3"
@@ -22,6 +23,7 @@ type Client struct {
 	ChainID      isc.ChainID
 	KeyPair      *cryptolib.KeyPair
 	nonces       map[string]uint64
+	noncesMutex  sync.Mutex
 }
 
 // New creates a new chainclient.Client
@@ -41,11 +43,11 @@ func New(
 }
 
 type PostRequestParams struct {
-	Transfer                 *isc.FungibleTokens
+	Transfer                 *isc.Assets
 	Args                     dict.Dict
 	Nonce                    uint64
 	NFT                      *isc.NFT
-	Allowance                *isc.Allowance
+	Allowance                *isc.Assets
 	GasBudget                *uint64
 	AutoAdjustStorageDeposit bool
 }
@@ -130,7 +132,7 @@ func (c *Client) post1RequestWithOutputs(
 			UnspentOutputIDs: isc.OutputSetToOutputIDs(outputs),
 			Request: &isc.RequestParameters{
 				TargetAddress:                 c.ChainID.AsAddress(),
-				FungibleTokens:                par.Transfer,
+				Assets:                        par.Transfer,
 				AdjustToMinimumStorageDeposit: par.AutoAdjustStorageDeposit,
 				Metadata: &isc.SendMetadata{
 					TargetContract: contractHname,
@@ -158,8 +160,10 @@ func (c *Client) PostOffLedgerRequest(
 ) (isc.OffLedgerRequest, error) {
 	par := defaultParams(params...)
 	if par.Nonce == 0 {
+		c.noncesMutex.Lock()
 		c.nonces[c.KeyPair.Address().Key()]++
 		par.Nonce = c.nonces[c.KeyPair.Address().Key()]
+		c.noncesMutex.Unlock()
 	}
 	var gasBudget uint64
 	if par.GasBudget == nil {
@@ -191,7 +195,7 @@ func (c *Client) PostOffLedgerRequest(
 
 func (c *Client) DepositFunds(n uint64) (*iotago.Transaction, error) {
 	return c.Post1Request(accounts.Contract.Hname(), accounts.FuncDeposit.Hname(), PostRequestParams{
-		Transfer: isc.NewFungibleTokens(n, nil),
+		Transfer: isc.NewAssets(n, nil),
 	})
 }
 
@@ -199,11 +203,11 @@ func (c *Client) DepositFunds(n uint64) (*iotago.Transaction, error) {
 func NewPostRequestParams(p ...interface{}) *PostRequestParams {
 	return &PostRequestParams{
 		Args:     parseParams(p),
-		Transfer: isc.NewFungibleTokens(0, nil),
+		Transfer: isc.NewAssets(0, nil),
 	}
 }
 
-func (par *PostRequestParams) WithTransfer(transfer *isc.FungibleTokens) *PostRequestParams {
+func (par *PostRequestParams) WithTransfer(transfer *isc.Assets) *PostRequestParams {
 	par.Transfer = transfer
 	return par
 }

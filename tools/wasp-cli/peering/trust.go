@@ -13,11 +13,16 @@ import (
 )
 
 func initTrustCmd() *cobra.Command {
-	return &cobra.Command{
+	var nodes []int
+
+	cmd := &cobra.Command{
 		Use:   "trust <pubKey> <netID>",
 		Short: "Trust the specified wasp node as a peer.",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
+			if nodes == nil {
+				nodes = chain.GetAllWaspNodes()
+			}
 			pubKey := args[0]
 			netID := args[1]
 			_, err := iotago.DecodeHex(pubKey) // Assert it can be decoded.
@@ -27,4 +32,8 @@ func initTrustCmd() *cobra.Command {
 			log.Check(err)
 		},
 	}
+
+	cmd.Flags().IntSliceVarP(&nodes, "nodes", "", nil, "wasp nodes to execute the command in (ex: 0,1,2,3) (default: all nodes)")
+
+	return cmd
 }

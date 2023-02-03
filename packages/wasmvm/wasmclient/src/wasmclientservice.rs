@@ -1,10 +1,11 @@
 // // Copyright 2020 IOTA Stiftung
 // // SPDX-License-Identifier: Apache-2.0
 
-use crate::*;
 use isc::{offledgerrequest::*, waspclient::*};
-use std::sync::{mpsc, Arc, RwLock};
+use std::sync::{Arc, mpsc, RwLock};
 use std::time::Duration;
+
+use crate::*;
 
 pub trait IClientService {
     fn call_view_by_hname(
@@ -129,14 +130,14 @@ impl Default for WasmClientService {
     }
 }
 
-impl std::fmt::Debug for WasmClientService {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> core::result::Result<(), std::fmt::Error> {
-        f.debug_tuple("WasmClientService")
-            .field(&self.client)
-            .field(&self.event_port)
-            .finish()
-    }
-}
+// impl std::fmt::Debug for WasmClientService {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> core::result::Result<(), std::fmt::Error> {
+//         f.debug_tuple("WasmClientService")
+//             .field(&self.client)
+//             .field(&self.event_port)
+//             .finish()
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

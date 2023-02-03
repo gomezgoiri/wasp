@@ -6,8 +6,8 @@ import (
 	"github.com/pangpanglabs/echoswagger/v2"
 
 	"github.com/iotaledger/wasp/packages/kv/dict"
-	"github.com/iotaledger/wasp/packages/webapi/interfaces"
-	models2 "github.com/iotaledger/wasp/packages/webapi/models"
+	"github.com/iotaledger/wasp/packages/webapi/v2/interfaces"
+	"github.com/iotaledger/wasp/packages/webapi/v2/models"
 )
 
 type Controller struct {
@@ -38,12 +38,12 @@ func (c *Controller) RegisterPublic(publicAPI echoswagger.ApiGroup, mocker inter
 	publicAPI.GET("chains/:chainID/receipts/:requestID", c.getReceipt).
 		AddParamPath("", "chainID", "ChainID (Bech32)").
 		AddParamPath("", "requestID", "RequestID (Hex)").
-		AddResponse(http.StatusOK, "ReceiptResponse", mocker.Get(models2.ReceiptResponse{}), nil).
+		AddResponse(http.StatusOK, "ReceiptResponse", mocker.Get(models.ReceiptResponse{}), nil).
 		SetSummary("Get a receipt from a request ID").
 		SetOperationId("getReceipt")
 
 	publicAPI.POST("requests/callview", c.executeCallView).
-		AddParamBody(mocker.Get(models2.ContractCallViewRequest{}), "", "Parameters", false).
+		AddParamBody(mocker.Get(models.ContractCallViewRequest{}), "", "Parameters", true).
 		AddResponse(http.StatusOK, "Result", dictExample, nil).
 		SetSummary("Call a view function on a contract by Hname").
 		SetDescription("Execute a view call. Either use HName or Name properties. If both are supplied, HName are used.").
@@ -51,10 +51,10 @@ func (c *Controller) RegisterPublic(publicAPI echoswagger.ApiGroup, mocker inter
 
 	publicAPI.POST("requests/offledger", c.handleOffLedgerRequest).
 		AddParamBody(
-			models2.OffLedgerRequest{Request: "Hex string"},
+			models.OffLedgerRequest{Request: "Hex string"},
 			"",
 			"Offledger request as JSON. Request encoded in Hex",
-			false).
+			true).
 		AddResponse(http.StatusAccepted, "Request submitted", nil, nil).
 		SetSummary("Post an off-ledger request").
 		SetOperationId("offLedger")
@@ -66,7 +66,7 @@ func (c *Controller) RegisterPublic(publicAPI echoswagger.ApiGroup, mocker inter
 		AddParamPath("", "requestID", "RequestID (Hex)").
 		AddResponse(http.StatusNotFound, "The chain or request id is invalid", nil, nil).
 		AddResponse(http.StatusRequestTimeout, "The waiting time has reached the defined limit", nil, nil).
-		AddResponse(http.StatusOK, "The request receipt", mocker.Get(models2.ReceiptResponse{}), nil)
+		AddResponse(http.StatusOK, "The request receipt", mocker.Get(models.ReceiptResponse{}), nil)
 }
 
 func (c *Controller) RegisterAdmin(adminAPI echoswagger.ApiGroup, mocker interfaces.Mocker) {
