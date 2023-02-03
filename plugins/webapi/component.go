@@ -145,7 +145,7 @@ func provide(c *dig.Container) error {
 		echoSwagger.SetRequestContentType(echo.MIMEApplicationJSON)
 		echoSwagger.SetResponseContentType(echo.MIMEApplicationJSON)
 
-		v2.Init(
+		webapi.Init(
 			Plugin.App().NewLogger("WebAPI/v2"),
 			echoSwagger,
 			deps.AppInfo.Version,

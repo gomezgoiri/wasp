@@ -8,9 +8,9 @@ import (
 	"github.com/iotaledger/hive.go/core/configuration"
 	"github.com/iotaledger/wasp/packages/authentication"
 	"github.com/iotaledger/wasp/packages/authentication/shared/permissions"
-	"github.com/iotaledger/wasp/packages/webapi/v2/interfaces"
-	"github.com/iotaledger/wasp/packages/webapi/v2/models"
-	"github.com/iotaledger/wasp/packages/webapi/v2/services"
+	"github.com/iotaledger/wasp/packages/webapi/interfaces"
+	"github.com/iotaledger/wasp/packages/webapi/models"
+	"github.com/iotaledger/wasp/packages/webapi/services"
 )
 
 type Controller struct {
