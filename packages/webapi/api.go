@@ -15,14 +15,14 @@ import (
 	"github.com/iotaledger/wasp/packages/peering"
 	"github.com/iotaledger/wasp/packages/registry"
 	userspkg "github.com/iotaledger/wasp/packages/users"
-	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/chain"
-	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/corecontracts"
-	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/metrics"
-	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/node"
-	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/requests"
-	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/users"
-	"github.com/iotaledger/wasp/packages/webapi/v2/interfaces"
-	"github.com/iotaledger/wasp/packages/webapi/v2/services"
+	"github.com/iotaledger/wasp/packages/webapi/controllers/chain"
+	"github.com/iotaledger/wasp/packages/webapi/controllers/corecontracts"
+	"github.com/iotaledger/wasp/packages/webapi/controllers/metrics"
+	"github.com/iotaledger/wasp/packages/webapi/controllers/node"
+	"github.com/iotaledger/wasp/packages/webapi/controllers/requests"
+	"github.com/iotaledger/wasp/packages/webapi/controllers/users"
+	"github.com/iotaledger/wasp/packages/webapi/interfaces"
+	"github.com/iotaledger/wasp/packages/webapi/services"
 )
 
 func loadControllers(server echoswagger.ApiRoot, mocker *Mocker, controllersToLoad []interfaces.APIController) {
