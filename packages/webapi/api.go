@@ -15,24 +15,23 @@ import (
 	"github.com/iotaledger/wasp/packages/peering"
 	"github.com/iotaledger/wasp/packages/registry"
 	userspkg "github.com/iotaledger/wasp/packages/users"
-	"github.com/iotaledger/wasp/packages/webapi/controllers/chain"
-	"github.com/iotaledger/wasp/packages/webapi/controllers/corecontracts"
-	"github.com/iotaledger/wasp/packages/webapi/controllers/metrics"
-	"github.com/iotaledger/wasp/packages/webapi/controllers/node"
-	"github.com/iotaledger/wasp/packages/webapi/controllers/requests"
-	"github.com/iotaledger/wasp/packages/webapi/controllers/users"
-	"github.com/iotaledger/wasp/packages/webapi/interfaces"
-	services2 "github.com/iotaledger/wasp/packages/webapi/services"
+	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/chain"
+	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/corecontracts"
+	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/metrics"
+	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/node"
+	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/requests"
+	"github.com/iotaledger/wasp/packages/webapi/v2/controllers/users"
+	"github.com/iotaledger/wasp/packages/webapi/v2/interfaces"
+	"github.com/iotaledger/wasp/packages/webapi/v2/services"
 )
 
 func loadControllers(server echoswagger.ApiRoot, mocker *Mocker, controllersToLoad []interfaces.APIController) {
 	for _, controller := range controllersToLoad {
-		publicGroup := server.Group(controller.Name(), "/")
+		group := server.Group(controller.Name(), "/v2/")
 
-		controller.RegisterPublic(publicGroup, mocker)
+		controller.RegisterPublic(group, mocker)
 
-		adminGroup := server.Group(controller.Name(), "/").
-			SetSecurity("Authorization")
+		adminGroup := group.SetSecurity("Authorization")
 
 		controller.RegisterAdmin(adminGroup, mocker)
 	}
@@ -61,17 +60,17 @@ func Init(
 	mocker := NewMocker()
 	mocker.LoadMockFiles()
 
-	vmService := services2.NewVMService(chainsProvider)
-	chainService := services2.NewChainService(chainsProvider, nodeConnectionMetrics, chainRecordRegistryProvider, vmService)
-	committeeService := services2.NewCommitteeService(chainsProvider, networkProvider, dkShareRegistryProvider)
-	registryService := services2.NewRegistryService(chainsProvider, chainRecordRegistryProvider)
-	offLedgerService := services2.NewOffLedgerService(chainService, networkProvider, requestCacheTTL)
-	metricsService := services2.NewMetricsService(chainsProvider)
-	peeringService := services2.NewPeeringService(chainsProvider, networkProvider, trustedNetworkManager)
-	evmService := services2.NewEVMService(chainService, networkProvider)
-	nodeService := services2.NewNodeService(chainRecordRegistryProvider, nodeOwnerAddresses, nodeIdentityProvider, shutdownHandler, trustedNetworkManager)
-	dkgService := services2.NewDKGService(dkShareRegistryProvider, dkgNodeProvider)
-	userService := services2.NewUserService(userManager)
+	vmService := services.NewVMService(chainsProvider)
+	chainService := services.NewChainService(chainsProvider, nodeConnectionMetrics, chainRecordRegistryProvider, vmService)
+	committeeService := services.NewCommitteeService(chainsProvider, networkProvider, dkShareRegistryProvider)
+	registryService := services.NewRegistryService(chainsProvider, chainRecordRegistryProvider)
+	offLedgerService := services.NewOffLedgerService(chainService, networkProvider, requestCacheTTL)
+	metricsService := services.NewMetricsService(chainsProvider)
+	peeringService := services.NewPeeringService(chainsProvider, networkProvider, trustedNetworkManager)
+	evmService := services.NewEVMService(chainService, networkProvider)
+	nodeService := services.NewNodeService(chainRecordRegistryProvider, nodeOwnerAddresses, nodeIdentityProvider, shutdownHandler, trustedNetworkManager)
+	dkgService := services.NewDKGService(dkShareRegistryProvider, dkgNodeProvider)
+	userService := services.NewUserService(userManager)
 	// --
 
 	claimValidator := func(claims *authentication.WaspClaims) bool {
