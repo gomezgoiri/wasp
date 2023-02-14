@@ -10,9 +10,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pangpanglabs/echoswagger/v2"
-	"go.elastic.co/apm/module/apmechov4"
 	"go.uber.org/dig"
 	websocketserver "nhooyr.io/websocket"
+
+	"go.elastic.co/apm/module/apmechov4/v2"
 
 	"github.com/iotaledger/hive.go/core/app"
 	"github.com/iotaledger/hive.go/core/app/pkg/shutdown"

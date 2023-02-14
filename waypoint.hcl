@@ -36,7 +36,7 @@ app "wasp-evm" {
         registry {
             use "docker" {
                 image = "ghcr.io/luke-thorne/wasp"
-                tag = gitrefpretty()
+                tag = gitreftag()
                 encoded_auth = base64encode(jsonencode(var.ghcr))
             }
         }

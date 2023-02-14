@@ -15,7 +15,7 @@ LABEL org.label-schema.vcs-url="https://github.com/iotaledger/wasp"
 RUN update-ca-certificates
 
 # Set the current Working Directory inside the container
-RUN mkdir /scratch
+# RUN mkdir /scratch
 WORKDIR /scratch
 
 # Prepare the folder where we are putting all the files
@@ -32,9 +32,16 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # Project build stage
 COPY . .
 
+RUN go install ./tools/schema && \
+  make wasm
+
 RUN --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/root/go/pkg/mod \
   go build -o /app/wasp -a -tags=${BUILD_TAGS} -ldflags=${BUILD_LD_FLAGS} .
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+  --mount=type=cache,target=/root/go/pkg/mod \
+  go build -o /app/wasp-cli -a -tags=${BUILD_TAGS} -ldflags=${BUILD_LD_FLAGS} .
 
 ############################
 # Image
