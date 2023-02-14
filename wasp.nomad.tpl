@@ -24,7 +24,7 @@ variable "wasp_config" {
     "disableEvents": true
   },
   "inx": {
-    "address": "{{ range service "inx.tangle-testnet-hornet" }}{{ .Address }}:{{ .Port }}{{ end }}",
+    "address": "{{ range service "inx.tangle-testnet" }}{{ .Address }}:{{ .Port }}{{ end }}",
     "maxConnectionAttempts": 30,
     "targetNetworkName": ""
   },
@@ -33,7 +33,7 @@ variable "wasp_config" {
     "chainState": {
       "path": "{{ env "NOMAD_TASK_DIR" }}/waspdb/chains/data"
     },
-    "debugSkipHealthCheck": false
+    "debugSkipHealthCheck": true
   },
   "p2p": {
     "identity": {
@@ -126,6 +126,29 @@ variable "wasp_config" {
         "whitelist": ${adminWhitelist}
       }
     }
+  },
+	"peering":{
+		"port": {{ env "NOMAD_PORT_peering" }},
+		"netid": "{{ env "NOMAD_ADDR_peering" }}"
+	},
+  "profiling":{
+    "enabled": false,
+    "bindAddress": "{{ env "NOMAD_ADDR_profiling" }}"
+  },
+  "inx": {
+    "address": "{{ range service "inx.tangle-testnet" }}{{ .Address }}:{{ .Port }}{{ end }}",
+    "maxConnectionAttempts": 30
+  },
+	"nanomsg":{
+		"port": {{ env "NOMAD_PORT_nanomsg" }}
+	},
+  "wal": {
+    "directory": "{{ env "NOMAD_TASK_DIR" }}/wal",
+    "enabled": true
+  },
+  "debug": {
+    "rawblocksEnabled": false,
+    "rawblocksDirectory": "{{ env "NOMAD_TASK_DIR" }}/blocks"
   }
 }
 EOH

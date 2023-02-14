@@ -4,7 +4,7 @@ export const networkOptions = [
     text: 'Shimmer Beta Network',
     apiEndpoint: 'https://api.hornet.sc.testnet.shimmer.network',
     faucetEndpoint: 'https://faucet.testnet.shimmer.network',
-    chainAddress: 'rms1prd8rh537dz4xs5rsrcn5w4j5g6gzqk0z4jlku2sc7e3q4v05ns2j730jd5',
+    chainAddress: 'rms1pp4x8a4h0vefcujxjf9tg6utuv5fp06fpszkzrjh0eqgn7vz23rm5z5lwcy',
   },
   {
     id: 1,

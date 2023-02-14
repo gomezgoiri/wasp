@@ -4,6 +4,7 @@
 package testlogger
 
 import (
+	"go.elastic.co/apm/module/apmzap/v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -18,7 +19,7 @@ type TestingT interface { // Interface so there's no need to pass the concrete t
 func NewSimple(debug bool) *logger.Logger {
 	cfg := zap.NewDevelopmentConfig()
 	cfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout("04:05.000")
-	log, err := cfg.Build()
+	log, err := cfg.Build(zap.WrapCore((&apmzap.Core{}).WrapCore))
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +43,9 @@ func NewNamedLogger(name string, timeLayout ...string) *logger.Logger {
 	if len(timeLayout) > 0 {
 		cfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(timeLayout[0])
 	}
-	log, err := cfg.Build()
+
+	log, err := cfg.Build(zap.WrapCore((&apmzap.Core{}).WrapCore))
+
 	if err != nil {
 		panic(err)
 	}

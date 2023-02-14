@@ -26,10 +26,10 @@ jobs:
 
       - name: Install solc
         run: |
-          sudo apt update 
-          sudo add-apt-repository ppa:ethereum/ethereum
-          sudo apt-get update
-          sudo apt-get install solc
+          apt update 
+          add-apt-repository ppa:ethereum/ethereum
+          apt-get update
+          apt-get install solc
 
       - name: Get dependencies
         run: |
@@ -80,16 +80,16 @@ jobs:
 
       - name: Install solc
         run: |
-          sudo apt update 
-          sudo add-apt-repository ppa:ethereum/ethereum
-          sudo apt-get update
-          sudo apt-get install solc
+          apt update 
+          add-apt-repository ppa:ethereum/ethereum
+          apt-get update
+          apt-get install solc
 
       - name: install tinygo
         # only work on x86_64
         run: |
           wget https://github.com/tinygo-org/tinygo/releases/download/v0.26.0/tinygo_0.26.0_amd64.deb
-          sudo dpkg -i tinygo_0.26.0_amd64.deb
+          dpkg -i tinygo_0.26.0_amd64.deb
           export PATH=$PATH:/usr/local/bin
 
       - name: install rust-toolchain
@@ -180,10 +180,10 @@ jobs:
 
       - name: Install solc
         run: |
-          sudo apt update 
-          sudo add-apt-repository ppa:ethereum/ethereum
-          sudo apt-get update
-          sudo apt-get install solc
+          apt update 
+          add-apt-repository ppa:ethereum/ethereum
+          apt-get update
+          apt-get install solc
       - name: Compile solidity contracts
         run: make compile-solidity
 
