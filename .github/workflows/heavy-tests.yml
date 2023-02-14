@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: Test
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted]
     container: ubuntu:22.04
     steps:
       - name: Install solc
@@ -34,6 +34,7 @@ jobs:
 
       - name: Get dependencies
         run: |
+          git config --global --add safe.directory /__w/wasp/wasp
           make wasm
           go get -v -t -d ./...
 
