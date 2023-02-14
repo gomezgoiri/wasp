@@ -2,6 +2,9 @@ name: Heavy Tests
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - tests/nightly
   schedule:
     # * is a special character in YAML so you have to quote this string
     - cron:  '30 1 * * *'
@@ -10,6 +13,7 @@ jobs:
   build:
     name: Test
     runs-on: [self-hosted, linux]
+    container: golang:1.20-buster
     steps:
       - name: Set up Go 1.x
         uses: actions/setup-go@v3
@@ -61,6 +65,7 @@ jobs:
   contract-test:
     name: Wasm contract tests
     runs-on: [self-hosted, linux]
+    container: golang:1.20-buster
     strategy:
       matrix:
         TEST_LANG: [go, gowasm, tswasm, rswasm]
@@ -163,6 +168,7 @@ jobs:
   golangci:
     name: Lint
     runs-on: [self-hosted, linux]
+    container: golang:1.20-buster
     steps:
       - uses: actions/setup-go@v3
         with:
