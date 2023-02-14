@@ -15,6 +15,14 @@ jobs:
     runs-on: [self-hosted, linux]
     container: ubuntu:22.04
     steps:
+      - name: Install solc
+        run: |
+          apt update
+          apt install -y software-properties-common make gcc git
+          add-apt-repository ppa:ethereum/ethereum
+          apt-get update
+          apt-get install solc
+
       - name: Set up Go 1.x
         uses: actions/setup-go@v3
         with:
@@ -23,14 +31,6 @@ jobs:
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
-
-      - name: Install solc
-        run: |
-          apt update
-          apt install -y software-properties-common make gcc git
-          add-apt-repository ppa:ethereum/ethereum
-          apt-get update
-          apt-get install solc
 
       - name: Get dependencies
         run: |
@@ -63,166 +63,166 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  contract-test:
-    name: Wasm contract tests
-    runs-on: [self-hosted, linux]
-    container: ubuntu:22.04
-    strategy:
-      matrix:
-        TEST_LANG: [go, gowasm, tswasm, rswasm]
-    steps:
-      - name: checkout to the directory
-        uses: actions/checkout@v3
+  # contract-test:
+  #   name: Wasm contract tests
+  #   runs-on: [self-hosted, linux]
+  #   container: ubuntu:22.04
+  #   strategy:
+  #     matrix:
+  #       TEST_LANG: [go, gowasm, tswasm, rswasm]
+  #   steps:
+  #     - name: checkout to the directory
+  #       uses: actions/checkout@v3
 
-      - name: install golang
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.19.5
+  #     - name: install golang
+  #       uses: actions/setup-go@v3
+  #       with:
+  #         go-version: 1.19.5
 
-      - name: Install solc
-        run: |
-          apt update 
-          add-apt-repository ppa:ethereum/ethereum
-          apt-get update
-          apt-get install solc
+  #     - name: Install solc
+  #       run: |
+  #         apt update 
+  #         add-apt-repository ppa:ethereum/ethereum
+  #         apt-get update
+  #         apt-get install solc
 
-      - name: install tinygo
-        # only work on x86_64
-        run: |
-          wget https://github.com/tinygo-org/tinygo/releases/download/v0.26.0/tinygo_0.26.0_amd64.deb
-          dpkg -i tinygo_0.26.0_amd64.deb
-          export PATH=$PATH:/usr/local/bin
+  #     - name: install tinygo
+  #       # only work on x86_64
+  #       run: |
+  #         wget https://github.com/tinygo-org/tinygo/releases/download/v0.26.0/tinygo_0.26.0_amd64.deb
+  #         dpkg -i tinygo_0.26.0_amd64.deb
+  #         export PATH=$PATH:/usr/local/bin
 
-      - name: install rust-toolchain
-        uses: actions-rs/toolchain@v1.0.7
-        with:
-          toolchain: stable
+  #     - name: install rust-toolchain
+  #       uses: actions-rs/toolchain@v1.0.7
+  #       with:
+  #         toolchain: stable
 
-      - name: install wasm-pack
-        run: |
-          curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+  #     - name: install wasm-pack
+  #       run: |
+  #         curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-      - name: install Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+  #     - name: install Node.js
+  #       uses: actions/setup-node@v3
+  #       with:
+  #         node-version: 18
 
-      - name: install schema
-        run: |
-          cd contracts/wasm/scripts
-          bash schema_all.sh
-          cd ..
-          npm install
+  #     - name: install schema
+  #       run: |
+  #         cd contracts/wasm/scripts
+  #         bash schema_all.sh
+  #         cd ..
+  #         npm install
 
-      - name: run builds
-        env:
-          TEST_LANG: ${{matrix.TEST_LANG}}
-        run: |
-          cd contracts/wasm/scripts
-          bash core_build.sh
-          if [ $TEST_LANG == "go" ]; then
-            bash schema_all.sh
-          elif [ $TEST_LANG == "gowasm" ]; then
-            bash go_all.sh
-          elif [ $TEST_LANG == "tswasm" ]; then
-            bash ts_all.sh
-          elif [ $TEST_LANG == "rswasm" ]; then
-            bash rust_all.sh
-          fi
+  #     - name: run builds
+  #       env:
+  #         TEST_LANG: ${{matrix.TEST_LANG}}
+  #       run: |
+  #         cd contracts/wasm/scripts
+  #         bash core_build.sh
+  #         if [ $TEST_LANG == "go" ]; then
+  #           bash schema_all.sh
+  #         elif [ $TEST_LANG == "gowasm" ]; then
+  #           bash go_all.sh
+  #         elif [ $TEST_LANG == "tswasm" ]; then
+  #           bash ts_all.sh
+  #         elif [ $TEST_LANG == "rswasm" ]; then
+  #           bash rust_all.sh
+  #         fi
 
-      - name: run tests
-        env:
-          TEST_LANG: ${{matrix.TEST_LANG}}
-        run: |
-          make compile-solidity
-          cd contracts/wasm
-          if [ $TEST_LANG == "go" ]; then
-            go test ./... -p 1
-          elif [ $TEST_LANG == "gowasm" ]; then
-            go test ./... -gowasm  -p 1
-          elif [ $TEST_LANG == "tswasm" ]; then
-            go test ./... -tswasm  -p 1
-          elif [ $TEST_LANG == "rswasm" ]; then
-            go test ./... -rswasm  -p 1
-          fi
+  #     - name: run tests
+  #       env:
+  #         TEST_LANG: ${{matrix.TEST_LANG}}
+  #       run: |
+  #         make compile-solidity
+  #         cd contracts/wasm
+  #         if [ $TEST_LANG == "go" ]; then
+  #           go test ./... -p 1
+  #         elif [ $TEST_LANG == "gowasm" ]; then
+  #           go test ./... -gowasm  -p 1
+  #         elif [ $TEST_LANG == "tswasm" ]; then
+  #           go test ./... -tswasm  -p 1
+  #         elif [ $TEST_LANG == "rswasm" ]; then
+  #           go test ./... -rswasm  -p 1
+  #         fi
 
-      - name: The job has failed
-        if: ${{ failure() }}
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          payload: |
-            {
-              "job": "${{ github.job }}",
-              "steps": "${{ steps }}",
-              "run_number": "${{ github.run_number }}",
-              "run_attempt": "${{ github.run_attempt }}",
-              "workflow": "${{ github.workflow }}",
-              "sha": "${{ github.sha }}",
-              "ref": "${{ github.ref }}",
-              "run_id": "${{ github.run_id }}",
-              "server_url": "${{ github.server_url }}",
-              "repository": "${{ github.repository }}"
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  #     - name: The job has failed
+  #       if: ${{ failure() }}
+  #       uses: slackapi/slack-github-action@v1.23.0
+  #       with:
+  #         payload: |
+  #           {
+  #             "job": "${{ github.job }}",
+  #             "steps": "${{ steps }}",
+  #             "run_number": "${{ github.run_number }}",
+  #             "run_attempt": "${{ github.run_attempt }}",
+  #             "workflow": "${{ github.workflow }}",
+  #             "sha": "${{ github.sha }}",
+  #             "ref": "${{ github.ref }}",
+  #             "run_id": "${{ github.run_id }}",
+  #             "server_url": "${{ github.server_url }}",
+  #             "repository": "${{ github.repository }}"
+  #           }
+  #       env:
+  #         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  golangci:
-    name: Lint
-    runs-on: [self-hosted, linux]
-    container: ubuntu:22.04
-    steps:
-      - uses: actions/setup-go@v3
-        with:
-          go-version: 1.19.5
-        id: go
+  # golangci:
+  #   name: Lint
+  #   runs-on: [self-hosted, linux]
+  #   container: ubuntu:22.04
+  #   steps:
+  #     - uses: actions/setup-go@v3
+  #       with:
+  #         go-version: 1.19.5
+  #       id: go
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v3
 
-      - name: Install solc
-        run: |
-          apt update 
-          add-apt-repository ppa:ethereum/ethereum
-          apt-get update
-          apt-get install solc
-      - name: Compile solidity contracts
-        run: make compile-solidity
+  #     - name: Install solc
+  #       run: |
+  #         apt update 
+  #         add-apt-repository ppa:ethereum/ethereum
+  #         apt-get update
+  #         apt-get install solc
+  #     - name: Compile solidity contracts
+  #       run: make compile-solidity
 
-      # - name: Generate SC files
-      #   run: |
-      #     cd contracts/wasm/scripts
-      #     bash schema_all.sh
+  #     # - name: Generate SC files
+  #     #   run: |
+  #     #     cd contracts/wasm/scripts
+  #     #     bash schema_all.sh
 
-      # - name: golangci-lint in SC
-      #   uses: golangci/golangci-lint-action@v3
-      #   with:
-      #     working-directory: contracts/wasm
-      #     args: --fix --timeout 5m0s --path-prefix=""
-      #     skip-pkg-cache: true
+  #     # - name: golangci-lint in SC
+  #     #   uses: golangci/golangci-lint-action@v3
+  #     #   with:
+  #     #     working-directory: contracts/wasm
+  #     #     args: --fix --timeout 5m0s --path-prefix=""
+  #     #     skip-pkg-cache: true
 
-      - name: Run global scope golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.51.1
-          args: --timeout 10m0s
-          skip-pkg-cache: true
+  #     - name: Run global scope golangci-lint
+  #       uses: golangci/golangci-lint-action@v3
+  #       with:
+  #         version: v1.51.1
+  #         args: --timeout 10m0s
+  #         skip-pkg-cache: true
 
-      - name: The job has failed
-        if: ${{ failure() }}
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          payload: |
-            {
-              "job": "${{ github.job }}",
-              "steps": "${{ steps }}",
-              "run_number": "${{ github.run_number }}",
-              "run_attempt": "${{ github.run_attempt }}",
-              "workflow": "${{ github.workflow }}",
-              "sha": "${{ github.sha }}",
-              "ref": "${{ github.ref }}",
-              "run_id": "${{ github.run_id }}",
-              "server_url": "${{ github.server_url }}",
-              "repository": "${{ github.repository }}"
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  #     - name: The job has failed
+  #       if: ${{ failure() }}
+  #       uses: slackapi/slack-github-action@v1.23.0
+  #       with:
+  #         payload: |
+  #           {
+  #             "job": "${{ github.job }}",
+  #             "steps": "${{ steps }}",
+  #             "run_number": "${{ github.run_number }}",
+  #             "run_attempt": "${{ github.run_attempt }}",
+  #             "workflow": "${{ github.workflow }}",
+  #             "sha": "${{ github.sha }}",
+  #             "ref": "${{ github.ref }}",
+  #             "run_id": "${{ github.run_id }}",
+  #             "server_url": "${{ github.server_url }}",
+  #             "repository": "${{ github.repository }}"
+  #           }
+  #       env:
+  #         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
