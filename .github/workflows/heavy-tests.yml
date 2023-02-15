@@ -40,8 +40,8 @@ jobs:
 
       - name: Install Hornet
         run: |
-          curl -LO https://github.com/iotaledger/hornet/releases/download/v${HORNET_VERSION}/HORNET-${HORNET_VERSION}_Linux_x86_64.tar.gz
-          tar -xf HORNET-${HORNET_VERSION}_Linux_x86_64.tar.gz -C /usr/local/bin
+          curl -LO https://github.com/iotaledger/hornet/releases/download/v$HORNET_VERSION/HORNET-$HORNET_VERSION_Linux_x86_64.tar.gz
+          tar -xf HORNET-$HORNET_VERSION_Linux_x86_64.tar.gz -C /usr/local/bin
 
       - name: Build
         run: make build
