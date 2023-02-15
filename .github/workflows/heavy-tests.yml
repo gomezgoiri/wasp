@@ -18,7 +18,7 @@ jobs:
       - name: Install solc
         run: |
           apt update
-          apt install -y  build-essential libstdc++6 software-properties-common make gcc git
+          apt install -y build-essential libstdc++6 software-properties-common make gcc git
           add-apt-repository ppa:ethereum/ethereum
           apt-get update
           apt-get install solc
@@ -37,6 +37,11 @@ jobs:
           git config --global --add safe.directory /__w/wasp/wasp
           make wasm
           go get -v -t -d ./...
+
+      - name: Install Hornet
+        run: |
+          curl -LO https://github.com/iotaledger/hornet/releases/download/v${HORNET_VERSION}/HORNET-${HORNET_VERSION}_Linux_x86_64.tar.gz
+          tar -xf HORNET-${HORNET_VERSION}_Linux_x86_64.tar.gz -C /usr/local/bin
 
       - name: Build
         run: make build
