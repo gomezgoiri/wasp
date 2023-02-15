@@ -9,6 +9,9 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron:  '30 1 * * *'
 
+env:
+  PATH: $PATH:/usr/bin
+
 jobs:
   build:
     name: Test
@@ -40,6 +43,7 @@ jobs:
 
       - name: Install Hornet
         run: |
+          echo $PATH
           curl -LO https://github.com/iotaledger/hornet/releases/download/v${{ vars.HORNET_VERSION }}/HORNET-${{ vars.HORNET_VERSION }}_Linux_x86_64.tar.gz
           tar -xf HORNET-${{ vars.HORNET_VERSION }}_Linux_x86_64.tar.gz -C /usr/bin
 
@@ -56,7 +60,7 @@ jobs:
           payload: |
             {
               "job": "${{ github.job }}",
-              "steps": "${{ steps }}",
+              "steps": "${{ toJSON(steps) }}",
               "run_number": "${{ github.run_number }}",
               "run_attempt": "${{ github.run_attempt }}",
               "workflow": "${{ github.workflow }}",
