@@ -52,7 +52,6 @@ jobs:
 
       - name: Test
         run: |
-          which hornet
           ls /usr/bin
           make test-full
 
@@ -63,7 +62,7 @@ jobs:
           payload: |
             {
               "job": "${{ github.job }}",
-              "steps": "${{ fromJSON(steps) }}",
+              "steps": "${{ steps.*.outcome }}",
               "run_number": "${{ github.run_number }}",
               "run_attempt": "${{ github.run_attempt }}",
               "workflow": "${{ github.workflow }}",
