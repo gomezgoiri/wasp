@@ -15,8 +15,6 @@ import (
 
 	"go.elastic.co/apm/module/apmechov4/v2"
 
-	"go.elastic.co/apm/module/apmechov4/v2"
-
 	"github.com/iotaledger/hive.go/core/app"
 	"github.com/iotaledger/hive.go/core/app/pkg/shutdown"
 	"github.com/iotaledger/hive.go/core/configuration"
