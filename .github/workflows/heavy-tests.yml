@@ -9,9 +9,6 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron: "30 1 * * *"
 
-env:
-  PATH: $PATH:/usr/bin
-
 jobs:
   build:
     name: Test
@@ -52,7 +49,6 @@ jobs:
 
       - name: Test
         run: |
-          ls /usr/bin
           make test-full
 
       - name: The job has failed
@@ -191,6 +187,14 @@ jobs:
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
+
+      - name: Install solc
+        run: |
+          apt update
+          apt install -y build-essential libstdc++6 software-properties-common make gcc git curl tar
+          add-apt-repository ppa:ethereum/ethereum
+          apt-get update
+          apt-get install solc
 
       - name: Compile solidity contracts
         run: make compile-solidity
