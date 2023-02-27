@@ -127,6 +127,7 @@ jobs:
         env:
           TEST_LANG: ${{matrix.TEST_LANG}}
         run: |
+          git config --global --add safe.directory /__w/wasp/wasp
           cd contracts/wasm/scripts
           bash core_build.sh
           if [ $TEST_LANG == "go" ]; then
