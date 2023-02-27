@@ -45,12 +45,11 @@ jobs:
         run: |
           curl -LO https://github.com/iotaledger/hornet/releases/download/v${{ vars.HORNET_VERSION }}/HORNET-${{ vars.HORNET_VERSION }}_Linux_x86_64.tar.gz
           tar -xf HORNET-${{ vars.HORNET_VERSION }}_Linux_x86_64.tar.gz -C /usr/bin
-          mv /usr/bin/HORNET-${{ vars.HORNET_VERSION }}_Linux_x86_64 /usr/bin/hornet
+          mv /usr/bin/HORNET-${{ vars.HORNET_VERSION }}_Linux_x86_64/hornet /usr/bin
           ls -la /usr/bin
-          chmod +x /usr/bin/hornet
-          chown $(whoami):$(whoami) /usr/bin/hornet
-          ls -la /usr/bin
-          whoami
+          # chmod +x /usr/bin/hornet
+          # chown $(whoami):$(whoami) /usr/bin/hornet
+          # ls -la /usr/bin
           hornet --version
 
       - name: Build
