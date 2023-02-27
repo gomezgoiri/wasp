@@ -9,8 +9,8 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron: "30 1 * * *"
 
-env:
-  PATH: $PATH:/usr/local/bin
+# env:
+#   PATH: $PATH:/usr/local/bin
 
 jobs:
   build:
