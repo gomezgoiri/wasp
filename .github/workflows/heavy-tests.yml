@@ -47,6 +47,7 @@ jobs:
           tar -xf HORNET-${{ vars.HORNET_VERSION }}_Linux_x86_64.tar.gz -C /usr/bin
           mv /usr/bin/HORNET-${{ vars.HORNET_VERSION }}_Linux_x86_64 /usr/bin/hornet
           chmod +x /usr/bin/hornet
+          chown $(whoami):$(whoami) /usr/bin/hornet
           hornet --version
 
       - name: Build
