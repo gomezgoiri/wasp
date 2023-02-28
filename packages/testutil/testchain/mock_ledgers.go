@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/iotaledger/hive.go/core/events"
 	"github.com/iotaledger/hive.go/core/logger"
+	"github.com/iotaledger/hive.go/runtime/event"
 	"github.com/iotaledger/inx-app/pkg/nodebridge"
 	iotago "github.com/iotaledger/iota.go/v3"
 	"github.com/iotaledger/wasp/packages/isc"
@@ -13,7 +13,7 @@ import (
 
 type MockedLedgers struct {
 	ledgers              map[string]*MockedLedger
-	milestones           *events.Event
+	milestones           *event.Event1[*nodebridge.Milestone]
 	pushMilestonesNeeded bool
 	log                  *logger.Logger
 	mutex                sync.Mutex
@@ -21,11 +21,9 @@ type MockedLedgers struct {
 
 func NewMockedLedgers(log *logger.Logger) *MockedLedgers {
 	result := &MockedLedgers{
-		ledgers: make(map[string]*MockedLedger),
-		milestones: events.NewEvent(func(handler interface{}, params ...interface{}) {
-			handler.(func(*nodebridge.Milestone))(params[0].(*nodebridge.Milestone))
-		}),
-		log: log.Named("mls"),
+		ledgers:    make(map[string]*MockedLedger),
+		milestones: event.New1[*nodebridge.Milestone](),
+		log:        log.Named("mls"),
 	}
 	result.SetPushMilestonesToNodesNeeded(true)
 	go result.pushMilestonesLoop()
@@ -51,14 +49,9 @@ func (mlT *MockedLedgers) GetLedger(chainID isc.ChainID) *MockedLedger {
 	return result
 }
 
-func (mlT *MockedLedgers) AttachMilestones(handler func(*nodebridge.Milestone)) *events.Closure {
-	closure := events.NewClosure(handler)
-	mlT.milestones.Hook(closure)
-	return closure
-}
-
-func (mlT *MockedLedgers) DetachMilestones(attachID *events.Closure) {
-	mlT.milestones.Detach(attachID)
+func (mlT *MockedLedgers) AttachMilestones(handler func(*nodebridge.Milestone)) func() {
+	unhook := mlT.milestones.Hook(handler).Unhook
+	return unhook
 }
 
 func (mlT *MockedLedgers) pushMilestonesLoop() {

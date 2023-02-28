@@ -128,7 +128,7 @@ func New(
 		committeeNodes: []*cryptolib.PublicKey{},
 	})
 
-	attachID := result.net.Attach(&result.netPeeringID, peering.PeerMessageReceiverStateManager, func(recv *peering.PeerMessageIn) {
+	unhook := result.net.Attach(&result.netPeeringID, peering.PeerMessageReceiverStateManager, func(recv *peering.PeerMessageIn) {
 		if recv.MsgType != constMsgTypeStm {
 			result.log.Warnf("Unexpected message, type=%v", recv.MsgType)
 			return
@@ -139,7 +139,9 @@ func New(
 	result.cleanupFun = func() {
 		// result.inputPipe.Close() // TODO: Uncomment it.
 		// result.messagePipe.Close() // TODO: Uncomment it.
-		result.net.Detach(attachID)
+		if unhook != nil {
+			unhook()
+		}
 	}
 
 	go result.run()

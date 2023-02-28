@@ -18,7 +18,7 @@ type DomainImpl struct {
 	permutation *util.Permutation16
 	permPubKeys []*cryptolib.PublicKey
 	peeringID   peering.PeeringID
-	attachIDs   []interface{}
+	unhookFuncs []func()
 	log         *logger.Logger
 	mutex       *sync.RWMutex
 }
@@ -33,7 +33,7 @@ func NewPeerDomain(netProvider peering.NetworkProvider, peeringID peering.Peerin
 		permutation: nil, // Will be set in ret.reshufflePeers().
 		permPubKeys: nil, // Will be set in ret.reshufflePeers().
 		peeringID:   peeringID,
-		attachIDs:   make([]interface{}, 0),
+		unhookFuncs: make([]func(), 0),
 		log:         log,
 		mutex:       &sync.RWMutex{},
 	}
@@ -156,8 +156,8 @@ func (d *DomainImpl) initPermPubKeys() {
 	}
 }
 
-func (d *DomainImpl) Attach(receiver byte, callback func(recv *peering.PeerMessageIn)) interface{} {
-	attachID := d.netProvider.Attach(&d.peeringID, receiver, func(recv *peering.PeerMessageIn) {
+func (d *DomainImpl) Attach(receiver byte, callback func(recv *peering.PeerMessageIn)) func() {
+	unhook := d.netProvider.Attach(&d.peeringID, receiver, func(recv *peering.PeerMessageIn) {
 		if recv.SenderPubKey.Equals(d.netProvider.Self().PubKey()) {
 			d.log.Debugf("dropping message for receiver=%v MsgType=%v from %v: message from self.",
 				recv.MsgReceiver, recv.MsgType, recv.SenderPubKey.String())
@@ -171,8 +171,8 @@ func (d *DomainImpl) Attach(receiver byte, callback func(recv *peering.PeerMessa
 		}
 		callback(recv)
 	})
-	d.attachIDs = append(d.attachIDs, attachID)
-	return attachID
+	d.unhookFuncs = append(d.unhookFuncs, unhook)
+	return unhook
 }
 
 func (d *DomainImpl) PeerStatus() []peering.PeerStatusProvider {
@@ -183,13 +183,11 @@ func (d *DomainImpl) PeerStatus() []peering.PeerStatusProvider {
 	return res
 }
 
-func (d *DomainImpl) Detach(attachID interface{}) {
-	d.netProvider.Detach(attachID)
-}
-
 func (d *DomainImpl) Close() {
-	for _, attachID := range d.attachIDs {
-		d.Detach(attachID)
+	for _, unhook := range d.unhookFuncs {
+		if unhook != nil {
+			unhook()
+		}
 	}
 	for i := range d.nodes {
 		d.nodes[i].Close()

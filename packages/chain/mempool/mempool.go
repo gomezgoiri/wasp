@@ -232,14 +232,14 @@ func New(
 		log,
 	)
 	netRecvPipeInCh := mpi.netRecvPipe.In()
-	netAttachID := net.Attach(&netPeeringID, peering.PeerMessageReceiverMempool, func(recv *peering.PeerMessageIn) {
+	unhook := net.Attach(&netPeeringID, peering.PeerMessageReceiverMempool, func(recv *peering.PeerMessageIn) {
 		if recv.MsgType != msgTypeMempool {
 			mpi.log.Warnf("Unexpected message, type=%v", recv.MsgType)
 			return
 		}
 		netRecvPipeInCh <- recv
 	})
-	go mpi.run(ctx, netAttachID)
+	go mpi.run(ctx, unhook)
 	return mpi
 }
 
@@ -295,7 +295,7 @@ func (mpi *mempoolImpl) ConsensusRequestsAsync(ctx context.Context, requestRefs 
 	return res
 }
 
-func (mpi *mempoolImpl) run(ctx context.Context, netAttachID interface{}) { //nolint: gocyclo
+func (mpi *mempoolImpl) run(ctx context.Context, cleanupFunc func()) { //nolint: gocyclo
 	serverNodesUpdatedPipeOutCh := mpi.serverNodesUpdatedPipe.Out()
 	accessNodesUpdatedPipeOutCh := mpi.accessNodesUpdatedPipe.Out()
 	reqConsensusProposalsPipeOutCh := mpi.reqConsensusProposalsPipe.Out()
@@ -382,7 +382,9 @@ func (mpi *mempoolImpl) run(ctx context.Context, netAttachID interface{}) { //no
 			// mpi.netRecvPipe.Close()
 			debugTicker.Stop()
 			timeTicker.Stop()
-			mpi.net.Detach(netAttachID)
+			if cleanupFunc != nil {
+				cleanupFunc()
+			}
 			return
 		}
 	}

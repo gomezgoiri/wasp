@@ -36,7 +36,7 @@ type Node struct {
 	processes               map[string]*proc                 // Only for introspection.
 	procLock                *sync.RWMutex                    // To guard access to the process pool.
 	initMsgQueue            chan *initiatorInitMsgIn         // Incoming events processed async.
-	attachID                interface{}                      // Peering attach ID
+	cleanupFunc             func()                           // Peering cleanup func
 	log                     *logger.Logger
 }
 
@@ -65,7 +65,7 @@ func NewNode(
 		initMsgQueue:            make(chan *initiatorInitMsgIn),
 		log:                     log,
 	}
-	n.attachID = netProvider.Attach(&initPeeringID, peering.PeerMessageReceiverDkgInit, n.receiveInitMessage)
+	n.cleanupFunc = netProvider.Attach(&initPeeringID, peering.PeerMessageReceiverDkgInit, n.receiveInitMessage)
 	go n.recvLoop()
 	return &n, nil
 }
@@ -91,7 +91,9 @@ func (n *Node) receiveInitMessage(peerMsg *peering.PeerMessageIn) {
 
 func (n *Node) Close() {
 	close(n.initMsgQueue)
-	n.netProvider.Detach(n.attachID)
+	if n.cleanupFunc != nil {
+		n.cleanupFunc()
+	}
 }
 
 // GenerateDistributedKey takes all the required parameters from the node and initiated the DKG procedure.
@@ -127,10 +129,14 @@ func (n *Node) GenerateDistributedKey(
 	}
 	defer netGroup.Close()
 	recvCh := make(chan *peering.PeerMessageIn, peerCount*2)
-	attachID := n.netProvider.Attach(&dkgID, peering.PeerMessageReceiverDkg, func(recv *peering.PeerMessageIn) {
+	unhook := n.netProvider.Attach(&dkgID, peering.PeerMessageReceiverDkg, func(recv *peering.PeerMessageIn) {
 		recvCh <- recv
 	})
-	defer n.netProvider.Detach(attachID)
+	defer func() {
+		if unhook != nil {
+			unhook()
+		}
+	}()
 	rTimeout := stepRetry
 	gTimeout := timeout
 	if peerPubs == nil {
@@ -284,7 +290,10 @@ func (n *Node) GenerateDistributedKey(
 			}
 		}
 	}
-	return dkShare, nil
+
+	var lel tcrypto.DKShare = dkShare
+
+	return lel, nil
 }
 
 // Async recv is needed to avoid locking on the even publisher (Recv vs Attach in proc).
@@ -311,7 +320,7 @@ func (n *Node) onInitMsg(msg *initiatorInitMsgIn) {
 	n.procLock.RUnlock()
 	go func() {
 		// This part should be executed async, because it accesses the network again, and can
-		// be locked because of the naive implementation of `events.Event`. It locks on all the callbacks.
+		// be locked because of the naive implementation of `event.Event`. It locks on all the callbacks.
 		n.procLock.Lock()
 		if p, err = onInitiatorInit(msg.peeringID, &msg.initiatorInitMsg, n); err == nil {
 			n.processes[p.dkgRef] = p

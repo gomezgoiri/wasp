@@ -10,9 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/iotaledger/hive.go/core/generics/event"
-	"github.com/iotaledger/hive.go/core/generics/lo"
 	"github.com/iotaledger/hive.go/core/logger"
+	"github.com/iotaledger/hive.go/lo"
 	"github.com/iotaledger/wasp/packages/chain"
 	"github.com/iotaledger/wasp/packages/chain/cmtLog"
 	"github.com/iotaledger/wasp/packages/chain/statemanager/smGPA/smGPAUtils"
@@ -130,13 +129,13 @@ func (c *Chains) Run(ctx context.Context) error {
 	c.accessMgr = accessMgr.New(ctx, c.chainServersUpdatedCB, c.nodeIdentityProvider.NodeIdentity(), c.networkProvider, c.log.Named("AM"))
 	c.trustedNetworkListenerCancel = c.trustedNetworkManager.TrustedPeersListener(c.trustedPeersUpdatedCB)
 
-	c.chainRecordRegistryProvider.Events().ChainRecordModified.Attach(event.NewClosure(func(event *registry.ChainRecordModifiedEvent) {
+	c.chainRecordRegistryProvider.Events().ChainRecordModified.Hook(func(event *registry.ChainRecordModifiedEvent) {
 		c.mutex.RLock()
 		defer c.mutex.RUnlock()
 		if chain, ok := c.allChains[event.ChainRecord.ChainID()]; ok {
 			chain.chain.ConfigUpdated(event.ChainRecord.AccessNodes)
 		}
-	}))
+	})
 
 	return c.activateAllFromRegistry() //nolint:contextcheck
 }

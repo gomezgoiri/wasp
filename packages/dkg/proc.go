@@ -49,7 +49,7 @@ type proc struct {
 	netGroup     peering.GroupProvider                      // A group for which the distributed key is generated.
 	dkgImpl      map[keySetType]*rabin_dkg.DistKeyGenerator // The cryptographic implementation to use.
 	dkgLock      *sync.RWMutex                              // Guard access to dkgImpl
-	attachID     interface{}                                // We keep it here to be able to detach from the network.
+	cleanupFunc  func()                                     // We keep it here to be able to detach from the network.
 	peerMsgCh    chan *peering.PeerMessageGroupIn           // A buffer for the received peer messages.
 	log          *logger.Logger                             // A logger to use.
 	myPubKey     *cryptolib.PublicKey                       // Just to make logging easier.
@@ -153,7 +153,7 @@ func onInitiatorInit(dkgID peering.PeeringID, msg *initiatorInitMsg, node *Node)
 		)
 	}
 	go p.processLoop(msg.timeout, p.steps[rabinStep7CommitAndTerminate].doneCh)
-	p.attachID = p.netGroup.Attach(peering.PeerMessageReceiverDkg, p.onPeerMessage)
+	p.cleanupFunc = p.netGroup.Attach(peering.PeerMessageReceiverDkg, p.onPeerMessage)
 	stepsStart <- make(multiKeySetMsgs)
 	return &p, nil
 }
@@ -201,7 +201,7 @@ func (p *proc) processLoop(timeout time.Duration, doneCh chan multiKeySetMsgs) {
 			// to resend some messages. We will wait until the timeout.
 			done = true
 		case <-timeoutCh:
-			p.netGroup.Detach(p.attachID)
+			p.cleanupFunc()
 			for i := range p.steps {
 				p.steps[i].close()
 			}

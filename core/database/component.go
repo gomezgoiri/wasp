@@ -5,7 +5,7 @@ import (
 
 	"go.uber.org/dig"
 
-	"github.com/iotaledger/hive.go/core/app"
+	"github.com/iotaledger/hive.go/app"
 	hivedb "github.com/iotaledger/hive.go/core/database"
 	"github.com/iotaledger/wasp/packages/chain"
 	"github.com/iotaledger/wasp/packages/daemon"

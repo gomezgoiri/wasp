@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	hivedb "github.com/iotaledger/hive.go/core/database"
-	"github.com/iotaledger/hive.go/core/kvstore"
+	"github.com/iotaledger/hive.go/kvstore"
 	"github.com/iotaledger/wasp/packages/database"
 )
 

@@ -14,7 +14,6 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	hivedb "github.com/iotaledger/hive.go/core/database"
-	"github.com/iotaledger/hive.go/core/generics/event"
 	"github.com/iotaledger/hive.go/core/logger"
 	iotago "github.com/iotaledger/iota.go/v3"
 	"github.com/iotaledger/wasp/packages/chain"
@@ -186,9 +185,9 @@ func New(t TestContext, initOptions ...*InitOptions) *Solo {
 	})
 	require.NoError(t, err)
 
-	ret.publisher.Events.Published.Hook(event.NewClosure(func(ev *publisher.ISCEvent[any]) {
+	ret.publisher.Events.Published.Hook(func(ev *publisher.ISCEvent[any]) {
 		ret.logger.Infof("solo publisher: %s %s %v", ev.Kind, ev.ChainID, ev.String())
-	}))
+	})
 
 	return ret
 }

@@ -87,14 +87,14 @@ func New(
 	), resendPeriod)
 
 	netRecvPipeInCh := ami.netRecvPipe.In()
-	netAttachID := net.Attach(&netPeeringID, peering.PeerMessageReceiverAccessMgr, func(recv *peering.PeerMessageIn) {
+	unhook := net.Attach(&netPeeringID, peering.PeerMessageReceiverAccessMgr, func(recv *peering.PeerMessageIn) {
 		if recv.MsgType != msgTypeAccessMgr {
 			ami.log.Warnf("Unexpected message, type=%v", recv.MsgType)
 			return
 		}
 		netRecvPipeInCh <- recv
 	})
-	go ami.run(ctx, netAttachID)
+	go ami.run(ctx, unhook)
 
 	return ami
 }
@@ -120,7 +120,7 @@ func (ami *accessMgrImpl) dismissPeerCB(peerPubKey *cryptolib.PublicKey) {
 	ami.dismissPeerBuf = append(ami.dismissPeerBuf, peerPubKey)
 }
 
-func (ami *accessMgrImpl) run(ctx context.Context, netAttachID interface{}) {
+func (ami *accessMgrImpl) run(ctx context.Context, cleanupFunc func()) {
 	reqTrustedNodesOutCh := ami.reqTrustedNodesPipe.Out()
 	reqChainAccessNodesPipeOutCh := ami.reqChainAccessNodesPipe.Out()
 	reqChainDismissedPipeOutCh := ami.reqChainDismissedPipe.Out()
@@ -163,7 +163,9 @@ func (ami *accessMgrImpl) run(ctx context.Context, netAttachID interface{}) {
 			// close(reqChainDismissedOutCh)
 			debugTicker.Stop()
 			timeTicker.Stop()
-			ami.net.Detach(netAttachID)
+			if cleanupFunc != nil {
+				cleanupFunc()
+			}
 			return
 		}
 	}

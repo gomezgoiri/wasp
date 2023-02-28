@@ -67,8 +67,8 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/iotaledger/hive.go/core/generics/shrinkingmap"
 	"github.com/iotaledger/hive.go/core/logger"
+	"github.com/iotaledger/hive.go/ds/shrinkingmap"
 	iotago "github.com/iotaledger/iota.go/v3"
 	"github.com/iotaledger/wasp/packages/isc"
 )
