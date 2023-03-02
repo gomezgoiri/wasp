@@ -37,8 +37,8 @@ wasp-cli set l1.apiaddress http://localhost:14265
 wasp-cli set l1.faucetaddress http://localhost:8091
 
 # You can add as many nodes as you'd like
-wasp-cli wasp add wasp-0 127.0.0.1:9090
-wasp-cli wasp add wasp-1 127.0.0.1:9091
+wasp-cli wasp add wasp-0 http://127.0.0.1:9090
+wasp-cli wasp add wasp-1 http://127.0.0.1:9091
 ```
 
 If you configure the Wasp node to use JWT authentication, you will need to log in
